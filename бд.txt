@@ -1,0 +1,129 @@
+
+CREATE DATABASE IF NOT EXISTS travel_agency CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE travel_agency;
+
+
+
+-- Таблица ролей
+CREATE TABLE IF NOT EXISTS roles (
+  id_role INT(11) NOT NULL AUTO_INCREMENT,
+  Name VARCHAR(50) NOT NULL,
+  PRIMARY KEY (id_role)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+CREATE TABLE IF NOT EXISTS users (
+  id_user INT(11) NOT NULL AUTO_INCREMENT,
+  Familia VARCHAR(100) NOT NULL,
+  Name VARCHAR(100) NOT NULL,
+  Patronymic VARCHAR(100) DEFAULT NULL,
+  telefon VARCHAR(20) DEFAULT NULL,
+  id_role INT(11) DEFAULT 2,
+  Login VARCHAR(50) NOT NULL,
+  Password VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_user),
+  UNIQUE KEY Login (Login),
+  KEY idx_users_login (Login),
+  KEY id_role (id_role),
+  CONSTRAINT users_ibfk_1 FOREIGN KEY (id_role) REFERENCES roles (id_role) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+CREATE TABLE IF NOT EXISTS hotels (
+  id INT(11) NOT NULL AUTO_INCREMENT,
+  name VARCHAR(200) NOT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+CREATE TABLE IF NOT EXISTS tours (
+  id INT(11) NOT NULL AUTO_INCREMENT,
+  title VARCHAR(200) NOT NULL,
+  description TEXT NOT NULL,
+  people_count INT(11) NOT NULL,
+  price DECIMAL(10,2) NOT NULL,
+  image VARCHAR(500) DEFAULT NULL,
+  destination VARCHAR(100) DEFAULT NULL,
+  hotel_id INT(11) DEFAULT NULL,
+  duration_days INT(11) DEFAULT 7,
+  departure_city VARCHAR(100) DEFAULT 'Москва',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
+  PRIMARY KEY (id),
+  KEY hotel_id (hotel_id),
+  KEY idx_tours_price (price),
+  KEY idx_tours_destination (destination),
+  KEY idx_tours_departure_city (departure_city),
+  CONSTRAINT tours_ibfk_1 FOREIGN KEY (hotel_id) REFERENCES hotels (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+CREATE TABLE IF NOT EXISTS tours_users (
+  id INT(11) NOT NULL AUTO_INCREMENT,
+  tour_id INT(11) NOT NULL,
+  user_id INT(11) NOT NULL,
+  booking_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+  status ENUM('активен','завершен','отменен') DEFAULT 'активен',
+  PRIMARY KEY (id),
+  UNIQUE KEY unique_booking (tour_id, user_id),
+  KEY idx_tours_users_user (user_id),
+  KEY idx_tours_users_tour (tour_id),
+  CONSTRAINT tours_users_ibfk_1 FOREIGN KEY (tour_id) REFERENCES tours (id) ON DELETE CASCADE,
+  CONSTRAINT tours_users_ibfk_2 FOREIGN KEY (user_id) REFERENCES users (id_user) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+
+
+INSERT INTO roles (id_role, Name) VALUES
+(1, 'администратор'),
+(2, 'пользователь');
+
+
+INSERT INTO users (id_user, Familia, Name, Patronymic, telefon, id_role, Login, Password, created_at) VALUES
+(1, 'Мушаков', 'Максим', 'Дмитриевич', '+7(999)123-45-67', 1, 'mushakov', '12345', '2026-03-25 10:27:06'),
+(2, 'Петров', 'Петр', 'Петрович', '+7(999)234-56-78', 2, 'petrov', '12345', '2026-03-25 10:27:06'),
+(3, 'Сидорова', 'Анна', 'Сергеевна', '+7(999)345-67-89', 2, 'sidorova', '12345', '2026-03-25 10:27:06'),
+(4, 'Кузнецов', 'Дмитрий', 'Алексеевич', '+7(999)456-78-90', 2, 'kuznetsov', '12345', '2026-03-25 10:27:06'),
+(5, 'Смирнова', 'Елена', 'Викторовна', '+7(999)567-89-01', 2, 'smirnova', '12345', '2026-03-25 10:27:06'),
+(6, 'Васильев', 'Алексей', 'Андреевич', '+7(999)678-90-12', 2, 'vasiliev', '12345', '2026-03-25 10:27:06'),
+(7, 'Морозова', 'Ольга', 'Дмитриевна', '+7(999)789-01-23', 2, 'morozova', '12345', '2026-03-25 10:27:06');
+
+
+INSERT INTO hotels (id, name) VALUES
+(1, 'Rixos Sharm El Sheikh'),
+(2, 'Hilton Dubai Jumeirah'),
+(3, 'The Edge Phuket'),
+(4, 'Voyage Belek'),
+(5, 'Sunrise Crystal Bay'),
+(6, 'Atlantis The Palm');
+
+
+INSERT INTO tours (id, title, description, people_count, price, image, destination, hotel_id, duration_days, departure_city, created_at, updated_at) VALUES
+(1, 'Египет, Хургада', 'Отличный отдых на Красном море. Песчаный пляж, аквапарк, анимация для детей и взрослых. Экскурсии в Луксор и Каир.', 2, 55923.00, 'images/tours/tour1.jpg', 'Хургада', 1, 7, 'Москва', '2026-03-25 10:27:06', '2026-03-25 11:32:38'),
+(2, 'ОАЭ, Дубай', 'Небоскребы, шопинг и пляжный отдых. Тур с вылетом из Москвы. Посещение Бурдж-Халифа и Дубай Молла.', 2, 53125.00, 'images/tours/tour2.jpg', 'Дубай', 2, 6, 'Москва', '2026-03-25 10:27:06', '2026-03-25 11:32:38'),
+(3, 'Таиланд, Пхукет', 'Экзотический отдых. Экскурсии, море, развлечения на любой вкус. Посещение островов Пхи-Пхи.', 2, 134949.00, 'images/tours/tour3.jpg', 'Пхукет', 3, 10, 'Москва', '2026-03-25 10:27:06', '2026-03-25 11:32:38'),
+(4, 'Турция, Белек', 'Отдых по системе "Ультра всё включено". Отель 5 звезд, собственная пляжная линия. Аквапарк, теннисные корты.', 2, 56142.00, 'images/tours/tour4.jpg', 'Белек', 4, 8, 'Москва', '2026-03-25 10:27:06', '2026-03-25 11:32:38'),
+(5, 'Шарм-эль-Шейх', 'Коралловые рифы, дайвинг, комфортный отдых для всей семьи. Лучшие места для снорклинга.', 2, 56893.00, 'images/tours/tour5.jpg', 'Шарм-эль-Шейх', 5, 8, 'Санкт-Петербург', '2026-03-25 10:27:06', '2026-03-25 11:32:38'),
+(6, 'Кипр, Ларнака', 'Семейный отдых на Средиземном море. Чистые пляжи, вкусная кухня, богатая экскурсионная программа.', 2, 77591.00, 'images/tours/tour6.jpg', 'Ларнака', NULL, 7, 'Москва', '2026-03-25 10:27:06', '2026-03-25 11:32:38'),
+(7, 'Мальдивы, Мале', 'Райский отдых на белоснежных пляжах. Виллы на воде, спа-процедуры, дайвинг.', 2, 245000.00, 'images/tours/tour7.jpg', 'Мале', NULL, 9, 'Москва', '2026-03-25 10:27:06', '2026-03-25 11:32:38'),
+(8, 'Италия, Рим', 'Экскурсионный тур по Вечному городу. Колизей, Ватикан, фонтан Треви. Вкуснейшая итальянская кухня.', 2, 89500.00, 'images/tours/tour8.jpg', 'Рим', NULL, 7, 'Москва', '2026-03-25 10:27:06', '2026-03-25 11:32:38'),
+(9, 'Греция, Крит', 'Отдых на острове Крит. Кносский дворец, пляжи Элафониси, греческая кухня.', 2, 68500.00, 'images/tours/tour9.jpg', 'Крит', NULL, 8, 'Москва', '2026-03-25 10:27:06', '2026-03-25 11:32:38'),
+(10, 'Турция, Анталья', 'Курортный отдых в Анталье. Пляж Коньяалты, водопады, шопинг.', 2, 45900.00, 'images/tours/tour10.jpg', 'Анталья', NULL, 7, 'Санкт-Петербург', '2026-03-25 10:27:06', '2026-03-25 11:32:38'),
+(11, 'Вьетнам, Нячанг', 'Экзотический отдых с лечебными грязями. Пляжи, острова, вкусная еда.', 2, 78900.00, 'images/tours/tour11.jpg', 'Нячанг', NULL, 10, 'Москва', '2026-03-25 10:27:06', '2026-03-25 11:32:38'),
+(12, 'Испания, Барселона', 'Гастрономический тур. Саграда Фамилия, парк Гуэль, Каталонская кухня.', 2, 72500.00, 'images/tours/tour12.jpg', 'Барселона', NULL, 7, 'Москва', '2026-03-25 10:27:06', '2026-03-25 11:32:38');
+
+
+INSERT INTO tours_users (id, tour_id, user_id, booking_date, status) VALUES
+(1, 1, 2, '2026-03-25 10:27:06', 'активен'),
+(2, 2, 2, '2026-03-25 10:27:06', 'активен'),
+(3, 3, 3, '2026-03-25 10:27:06', 'активен'),
+(4, 4, 4, '2026-03-25 10:27:06', 'завершен'),
+(5, 5, 5, '2026-03-25 10:27:06', 'активен'),
+(7, 7, 6, '2026-03-25 10:27:06', 'активен'),
+(8, 8, 3, '2026-03-25 10:27:06', 'активен'),
+(9, 9, 4, '2026-03-25 10:27:06', 'активен'),
+(10, 10, 7, '2026-03-25 10:27:06', 'завершен');
+
+
